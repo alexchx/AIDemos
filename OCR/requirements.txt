@@ -1,0 +1,8 @@
+chatllm
+unstructured
+pdf2image
+pdfminer.six
+IPython
+unstructured_inference
+rapidocr_onnxruntime
+python-dotenv
