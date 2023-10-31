@@ -1,6 +1,4 @@
-# OCR
-
-Based on RapidOCR and can be used for simple scenarios, for complex scenarios like table recognition, please use PaddleOCR instead.
+# Text Summary
 
 ## Setup
 Add config file .env with proper configurations.
