@@ -4,7 +4,7 @@ from langchain.chains import RetrievalQA
 from langchain.chat_models import ChatOpenAI
 from langchain.document_loaders import PyMuPDFLoader
 from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.text_splitter import CharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores.chroma import Chroma
 
 # References:
@@ -37,7 +37,8 @@ def count_tokens(docs):
 
 def get_vector_retriever(docs):
     # The splitter will only use overlap when the chunk size is longer than the chunk size limit.
-    text_splitter = CharacterTextSplitter(
+    # https://dev.to/eteimz/understanding-langchains-recursivecharactertextsplitter-2846
+    text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=2000,
         chunk_overlap=100
     )
