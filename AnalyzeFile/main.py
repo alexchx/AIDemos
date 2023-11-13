@@ -1,11 +1,14 @@
 import dotenv
 import re
+from langchain.callbacks import get_openai_callback
 from langchain.chains import RetrievalQA
 from langchain.chat_models import ChatOpenAI
 from langchain.document_loaders import PyMuPDFLoader
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores.chroma import Chroma
+
+#langchain.debug = True
 
 # References:
 # https://www.zhihu.com/tardis/bd/art/640936557?source_id=1001
@@ -66,8 +69,8 @@ path = "data/恒力液压.pdf"
 #path = "data/上海韦尔半导体股份有限公司招股说明书.pdf"
 
 docs = load_pdf(path)
-tokens = count_tokens(docs)
-print(f"{path}\n{tokens} tokens")
+#tokens = count_tokens(docs)
+#print(f"{path}\n{tokens} tokens")
 
 retriever = get_vector_retriever(docs)
 
@@ -82,7 +85,12 @@ questions = [
     "该公司的销售额、利润等财务指标"
     ]
 
-for question in questions:
-    print(f"\n\n<< {question} >>：")
-    result = do_qa(question, retriever)
-    print(result['result'])
+with get_openai_callback() as cb:
+    for question in questions:
+        print(f"\n\n<< {question} >>：")
+        result = do_qa(question, retriever)
+        print(result['result'])
+
+print("\n")
+
+print(cb)
