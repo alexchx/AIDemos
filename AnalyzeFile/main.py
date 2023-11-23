@@ -1,7 +1,7 @@
 import dotenv
 #import langchain
-import qa
-import table
+from libs import qa
+from libs import table
 from langchain.callbacks import get_openai_callback
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.chat_models import ChatOpenAI

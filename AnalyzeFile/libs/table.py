@@ -3,6 +3,7 @@ from typing import Iterable, Optional, Union
 
 def clean(x):
      if (type(x) == str):
+        #return x.replace('\r', '')
         return x.replace('\r', ' ')
      else:
          return x
