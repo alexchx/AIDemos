@@ -1,11 +1,14 @@
 # Analyze File
 
 ## Setup
-Add config file .env with proper configurations.
-```text
-OPENAI_API_BASE=xxxxxx
-OPENAI_API_KEY=xxxxxx
-```
+1.  Add config file .env with proper configurations.
+    ```text
+    OPENAI_API_BASE=xxxxxx
+    OPENAI_API_KEY=xxxxxx
+    ```
+
+1.  Install JDK which is required by [tabula-py](https://github.com/chezou/tabula-py).
+
 
 ## Run
 

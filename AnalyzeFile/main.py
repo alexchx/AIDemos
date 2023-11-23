@@ -1,12 +1,11 @@
 import dotenv
-import re
+#import langchain
+import qa
+import table
 from langchain.callbacks import get_openai_callback
-from langchain.chains import RetrievalQA
+from langchain.schema.language_model import BaseLanguageModel
 from langchain.chat_models import ChatOpenAI
-from langchain.document_loaders import PyMuPDFLoader
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores.chroma import Chroma
+
 
 #langchain.debug = True
 
@@ -18,79 +17,50 @@ dotenv.load_dotenv()
 llm = ChatOpenAI(model="gpt-3.5-turbo-16k", temperature=0)
 #llm = ChatOpenAI(model="gpt-4-1106-preview", temperature=0)
 
-def load_pdf(path):
-    loader = PyMuPDFLoader(path)
-    docs = loader.load()
+def qa_pdf(path: str, llm: BaseLanguageModel):
+    docs = qa.load_pdf(path)
 
-    exp = "^([^\\n]+)公司([\\n ]*)([^\\n]*)招股说明书([^\\n]*)([\\n ]+)([\\d\\- ]+)([\\n ]+)"
+    retriever = qa.get_vector_retriever(docs)
 
-    # 去除页眉页脚
-    for i in range(len(docs)):
-        docs[i].page_content = re.sub(exp, "", docs[i].page_content)
+    #声明字符串数组
+    questions = [
+        "该公司的主要业务是什么",
+        "该公司的产品及特征是什么",
+        "该公司在行业供应链上的上、中、下游分别是什么",
+        "该公司存在哪些风险",
+        "该公司有哪些竞争对手",
+        "该公司有哪些客户",
+        "该公司的销售额、利润等财务指标"
+        ]
 
-    return docs
+    with get_openai_callback() as cb:
+        for question in questions:
+            print(f"\n\n<< {question} >>：")
+            result = qa.do_qa(question, retriever, llm)
+            print(result['result'])
 
+    print("\n")
 
-def count_tokens(docs):
-    num_tokens = 0
-    for doc in docs:
-        num_tokens += llm.get_num_tokens(doc.page_content)
-    return num_tokens
-
-
-def get_vector_retriever(docs):
-    # The splitter will only use overlap when the chunk size is longer than the chunk size limit.
-    # https://dev.to/eteimz/understanding-langchains-recursivecharactertextsplitter-2846
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=2000,
-        chunk_overlap=100
-    )
-
-    split_docs = text_splitter.split_documents(docs)
-
-    embeddings = OpenAIEmbeddings(deployment="lqembedding")
-
-    docsearch = Chroma.from_documents(split_docs, embeddings)
-
-    return docsearch.as_retriever()
+    print(cb)
 
 
-def do_qa(question, retriever):
-    qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever)
+def parse_tables(path: str):
+    # data/天普股份.pdf
+    # [99,100]
+    # [102]
+    # [103]
+    tables = table.read_tables(path, [99,100])
 
-    result = qa({"query": question})
+    for t in tables:
+        print(t)
+        print("\n")
 
-    return result
 
-
-path = "data/恒力液压.pdf"
+#path = "data/宸展光电.pdf"
 #path = "data/安徽众源新材料股份有限公司.pdf"
-#path = "data/天普股份.pdf"
+path = "data/天普股份.pdf"
 #path = "data/上海韦尔半导体股份有限公司招股说明书.pdf"
+#path = "data/公司.pdf"
 
-docs = load_pdf(path)
-#tokens = count_tokens(docs)
-#print(f"{path}\n{tokens} tokens")
-
-retriever = get_vector_retriever(docs)
-
-#声明字符串数组
-questions = [
-    "该公司的主要业务是什么",
-    "该公司的产品及特征是什么",
-    "该公司在行业供应链上的上、中、下游分别是什么",
-    "该公司存在哪些风险",
-    "该公司有哪些竞争对手",
-    "该公司有哪些客户",
-    "该公司的销售额、利润等财务指标"
-    ]
-
-with get_openai_callback() as cb:
-    for question in questions:
-        print(f"\n\n<< {question} >>：")
-        result = do_qa(question, retriever)
-        print(result['result'])
-
-print("\n")
-
-print(cb)
+#qa_pdf(path, llm)
+parse_tables(path)
