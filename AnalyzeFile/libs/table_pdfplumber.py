@@ -1,8 +1,8 @@
 import pdfplumber
 from pandas import DataFrame
-from typing import Optional
+from typing import Optional, List
 
-def clean(tbl):
+def clean(tbl: List[List[str | None]]):
     for row in tbl:
         for index in range(0, len(row)):
             if row[index] != None:
@@ -10,10 +10,7 @@ def clean(tbl):
     
     return tbl
 
-def read_tables(
-    path: str,
-    page: Optional[int] = None,
-):
+def read_tables(path: str, page: Optional[int] = None):
     pdf = pdfplumber.open(path)
 
     pdfPages = None

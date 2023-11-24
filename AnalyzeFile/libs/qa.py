@@ -19,7 +19,7 @@ def load_pdf(path: str):
     loader = PyMuPDFLoader(path)
     docs = loader.load()
 
-    exp = "^([^\\n]+)公司([\\n ]*)([^\\n]*)招股说明书([^\\n]*)([\\n ]+)([\\d\\- ]+)([\\n ]+)"
+    exp = "^([^\n]+)公司([\n ]*)([^\n]*)招股说明书([^\n]*)([\n ]+)([\d\- ]+)([\n ]+)"
 
     # 去除页眉页脚
     for i in range(len(docs)):
