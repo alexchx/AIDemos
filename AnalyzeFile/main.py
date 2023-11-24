@@ -1,7 +1,6 @@
 import dotenv
 #import langchain
-from libs import qa
-from libs import table
+from libs import qa, table_tabula, table_pdfplumber
 from langchain.callbacks import get_openai_callback
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.chat_models import ChatOpenAI
@@ -44,16 +43,21 @@ def qa_pdf(path: str, llm: BaseLanguageModel):
     print(cb)
 
 
-def parse_tables(path: str):
+def parse_tables1(path: str):
     # data/天普股份.pdf
     # [99,100]
     # [102]
     # [103]
-    tables = table.read_tables(path, [99,100])
+    tables = table_tabula.read_tables(path, 'all')
 
     for t in tables:
         print(t)
         print("\n")
+
+def parse_tables2(path: str):
+    tables = table_pdfplumber.read_tables(path)
+
+    table_pdfplumber.print_tables(tables)
 
 
 #path = "data/宸展光电.pdf"
@@ -63,4 +67,5 @@ path = "data/天普股份.pdf"
 #path = "data/公司.pdf"
 
 #qa_pdf(path, llm)
-parse_tables(path)
+#parse_tables1(path)
+parse_tables2(path)
