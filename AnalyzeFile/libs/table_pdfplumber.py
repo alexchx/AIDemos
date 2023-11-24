@@ -1,5 +1,6 @@
 import pdfplumber
-from typing import Iterable, Optional, Union
+from pandas import DataFrame
+from typing import Optional
 
 def clean(tbl):
     for row in tbl:
@@ -34,7 +35,5 @@ def print_tables(pages: dict):
         print(f"Page {page}:")
 
         for tbl in tables:
-            for row in tbl:
-                print(row)
-            
+            print(DataFrame(tbl[1:], columns=tbl[0]))
             print("\n")
