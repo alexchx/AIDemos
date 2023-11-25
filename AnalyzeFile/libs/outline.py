@@ -21,12 +21,12 @@ exp_no_linebreak = "[^\n]+"
 exp_line_prefix = "((?<=\n) *|^)"
 exp_line_postfix = "((?= *\n)|$)"
 exp_header_types = [
-    f"{exp_line_prefix}(本次发行概况|发行概况|发行人声明|释义|目[\n ]*录|声明及承诺|重大事项提示|重要说明){exp_line_postfix}",
-    f"{exp_line_prefix}第({exp_nums_zh})节\n*{exp_no_linebreak}",   # 第一节
-    f"{exp_line_prefix}({exp_nums_zh})、{exp_no_linebreak}",     # 一、
-    f"{exp_line_prefix}（({exp_nums_zh})）{exp_no_linebreak}",   # （一）
-    f"{exp_line_prefix}(\d+)、{exp_no_linebreak}",               # 1、
-    f"{exp_line_prefix}（(\d+)）{exp_no_linebreak}"              # （1）
+    f"{exp_line_prefix}(本次发行概况|发行概况|发行人声明|释义|目[\n ]*录|声明及承诺|重大事项提示|重要说明){exp_line_postfix}",  # 固定标题
+    f"{exp_line_prefix}第({exp_nums_zh})节\n*{exp_no_linebreak}",                                                         # 第一节
+    f"{exp_line_prefix}({exp_nums_zh})、{exp_no_linebreak}",                                                              # 一、
+    f"{exp_line_prefix}（({exp_nums_zh})）{exp_no_linebreak}",                                                            # （一）
+    f"{exp_line_prefix}(\d+)、{exp_no_linebreak}",                                                                        # 1、
+    f"{exp_line_prefix}（(\d+)）{exp_no_linebreak}"                                                                       # （1）
 ]
 exp_header = f"({'|'.join(exp_header_types)})"
 
