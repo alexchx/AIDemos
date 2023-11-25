@@ -47,10 +47,7 @@ class OutlineHeader:
         prevOrder = header_info(self.children[len(self.children) - 1].label)['order'] if len(self.children) > 0 else 0
         curOrder = header_info(child.label)['order']
 
-        if curOrder != prevOrder + 1 and (curOrder != 0 or prevOrder != 0):
-            # header order not match sibling or not start from 1
-            if showTrace:
-                print(f"Invalid order (cur: {curOrder}, prev: {prevOrder}): #{str(child.page).ljust(5, ' ')} {child.label}")
+        if self.validate(child, curOrder, prevOrder) == False:
             return False
 
         child.parents = self.parents.copy()
@@ -64,16 +61,22 @@ class OutlineHeader:
         prevOrder = header_info(self.label)['order']
         curOrder = header_info(sibling.label)['order']
 
-        if curOrder != prevOrder + 1 and (curOrder != 0 and prevOrder != 0):
-            # header order not match sibling or not start from 1
-            if showTrace:
-                print(f"Invalid order (cur: {curOrder}, prev: {prevOrder}): #{str(sibling.page).ljust(5, ' ')} {sibling.label}")
+        if self.validate(sibling, curOrder, prevOrder) == False:
             return False
 
         sibling.parents = self.parents
             
         self.parents[len(self.parents) - 1].children.append(sibling)
 
+        return True
+    
+    def validate(self, target: Self, curOrder: int, prevOrder: int):
+        if curOrder != prevOrder + 1 and (curOrder != 0 and prevOrder != 0):
+            # header order not match sibling or not start from 1
+            if showTrace:
+                print(f"Invalid order (cur: {curOrder}, prev: {prevOrder}): #{str(target.page).ljust(5, ' ')} {target.label}")
+            return False
+        
         return True
 
 
