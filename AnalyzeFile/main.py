@@ -1,6 +1,6 @@
 import dotenv
 #import langchain
-from libs import qa, table_tabula, table_pdfplumber
+from libs import qa, table_tabula, table_pdfplumber, outline
 from langchain.callbacks import get_openai_callback
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.chat_models import ChatOpenAI
@@ -59,6 +59,13 @@ def parse_tables2(path: str):
 
     table_pdfplumber.print_tables(tables)
 
+def parse_outline(path: str):
+    pages = outline.load_pdf(path)
+    headers = outline.extract_headers(pages)
+    result = outline.gen_outline(headers, trace=True)
+
+    outline.print_outline(result.children, path="catalogs.txt", headline=path)
+
 
 #path = "data/宸展光电.pdf"
 #path = "data/安徽众源新材料股份有限公司.pdf"
@@ -68,4 +75,5 @@ path = "data/天普股份.pdf"
 
 #qa_pdf(path, llm)
 #parse_tables1(path)
-parse_tables2(path)
+#parse_tables2(path)
+parse_outline(path)

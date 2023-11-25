@@ -4,7 +4,7 @@ import re
 import cn2an
 from langchain.document_loaders import PyMuPDFLoader
 from langchain.docstore.document import Document
-from typing import Optional, List, Self
+from typing import Optional, List, Self, Tuple
 from colorama import Fore
 
 #langchain.debug = True
@@ -33,11 +33,13 @@ exp_header = f"({'|'.join(exp_header_types)})"
 
 class OutlineHeader:
     label: str
-    parents: list[Self]
-    children: list[Self]
+    page: int
+    parents: List[Self]
+    children: List[Self]
 
-    def __init__(self, label: str):
+    def __init__(self, label: str, page: int):
         self.label = label
+        self.page = page
         self.parents = []
         self.children = []
 
@@ -48,7 +50,7 @@ class OutlineHeader:
         if curOrder != prevOrder + 1 and (curOrder != 0 or prevOrder != 0):
             # header order not match sibling or not start from 1
             if showTrace:
-                print(f"Ignored header as invalid order {curOrder}: {child.label}")
+                print(f"Invalid order (cur: {curOrder}, prev: {prevOrder}): #{str(child.page).ljust(5, ' ')} {child.label}")
             return False
 
         child.parents = self.parents.copy()
@@ -65,7 +67,7 @@ class OutlineHeader:
         if curOrder != prevOrder + 1 and (curOrder != 0 and prevOrder != 0):
             # header order not match sibling or not start from 1
             if showTrace:
-                print(f"Ignored header as invalid order {curOrder}: {sibling.label}",)
+                print(f"Invalid order (cur: {curOrder}, prev: {prevOrder}): #{str(sibling.page).ljust(5, ' ')} {sibling.label}")
             return False
 
         sibling.parents = self.parents
@@ -93,26 +95,26 @@ def extract_headers(pages: List[Document]):
 
     # TODO：先去除表格内容后再提取标题，因表格中可能会含有很多异常的标题信息
 
-    headers = []
+    headers: List[Tuple[str, int]] = []
     for page in pages:
         matches = regex.findall(page.page_content)
         for m in matches:
-            headers.append(m[0])
+            headers.append((m[0], page.metadata['page']))
     
     # 去除标题中的换行符、以及首尾空格
     regex = re.compile("\n+")
-    headers = [regex.sub(" ", h.strip()) for h in headers]
+    headers = [(regex.sub(" ", h[0].strip()), h[1]) for h in headers]
 
     # 去除目录内容
     catalogIndex = -1
     for i in range(len(headers)):
-        if re.search("目[\n ]*录", headers[i]):
+        if re.search("目[\n ]*录", headers[i][0]):
             catalogIndex = i
             break
     lastCatalogItemIndex = -1
     if catalogIndex != -1:
         for i in range(len(headers) - 1, catalogIndex, -1):
-            if re.search("[.]{4,} *\d+ *$", headers[i]):
+            if re.search("[.]{4,} *\d+ *$", headers[i][0]):
                 lastCatalogItemIndex = i
                 break
     if lastCatalogItemIndex != -1:
@@ -121,17 +123,16 @@ def extract_headers(pages: List[Document]):
     return headers
 
 
-
-def gen_outline(headers: list[str], trace: bool = False):
+def gen_outline(headers: List[Tuple[str, int]], trace: bool = False):
     global showTrace
     showTrace = trace
 
-    outline = OutlineHeader("")
+    outline = OutlineHeader("", -1)
     prev: OutlineHeader = None
 
     for h in headers:
-        hd_info = header_info(h)
-        oh = OutlineHeader(h)
+        hd_info = header_info(h[0])
+        oh = OutlineHeader(h[0], h[1])
         included = False
 
         if prev is None:
@@ -179,15 +180,22 @@ def header_info(label: str):
     }
 
 
-catalogs = ""
+def print_outline(outline: List[OutlineHeader], level: int = 0, path: str = '', headline: str = ''):
+    if level == 0 and path != '':
+        with open(path, 'w') as f:
+            f.write(headline + "\n" if headline != '' else "")
 
-def print_outline(outline: list[OutlineHeader], level: int = 0):
-    global catalogs
-    for h in outline:
-        #print("    " * level + h.label)
-        catalogs += "    " * level + h.label + "\n"
-        print_outline(h.children, level + 1)
+    for oh in outline:
+        line = str(oh.page).ljust(5, ' ') + "    " * level + ' ' + oh.label
+        if path != '':
+            with open(path, 'a') as f:
+                f.write(line + "\n")
+        else:
+            print(line)
+        
+        print_outline(oh.children, level + 1, path)
 
+    
 if __name__ == '__main__':
     path = "./data/赛伍技术.pdf"
 
@@ -202,20 +210,15 @@ if __name__ == '__main__':
     print(tree)
     """
 
+    """
+    pdf = pdfplumber.open(path)
+    page = pdf.pages[101]
+    tbls = page.extract_text_lines()
+    print(tbls)
+    """
+
     pages = load_pdf(path)
     headers = extract_headers(pages)
-    outline = gen_outline(headers, True)
+    outline = gen_outline(headers, trace=True)
 
-    print_outline(outline.children)
-
-    if os.path.exists("catalogs.txt"):
-        os.remove("catalogs.txt")
-
-    with open('catalogs.txt', 'w') as f:
-        f.write(catalogs)
-
-
-    # pdf = pdfplumber.open(path)
-    # page = pdf.pages[101]
-    # tbls = page.extract_text_lines()
-    # print(tbls)
+    print_outline(outline.children, path="catalogs.txt", headline=path)
